@@ -22,7 +22,7 @@ A local-first SQL learning platform built with Flask and SQLite. It includes acc
 
 5. Open http://127.0.0.1:5000/login to sign in or create an account.
 
-The account/progress and practice databases initialize lazily on the first non-health request. Locally they are created beside `app.py`; `SQL_MASTERY_DATABASE` and `SQL_MASTERY_PRACTICE_DATABASE` can override their paths. The root `app.py` exposes the Flask `app` object directly for Vercel's Flask runtime; no custom `vercel.json` routing is required. `/api/health` does not initialize or depend on SQLite.
+The account/progress and practice databases initialize lazily on the first non-health request. Locally they are created beside `app.py`; `SQL_MASTERY_DATABASE` and `SQL_MASTERY_PRACTICE_DATABASE` can override their paths. The root `app.py` exposes the Flask `app` object directly for Vercel's Flask runtime; no custom `vercel.json` routing is required. `/health` and `/api/health` do not initialize or depend on SQLite.
 
 ## Learning activity
 

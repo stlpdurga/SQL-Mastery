@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, g, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.exceptions import HTTPException
 
 ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env")
@@ -138,7 +139,7 @@ QUIZ_BANK = {
 
 def build_quiz(title, number):
     question, correct_option, *distractors = QUIZ_BANK[title]
-    correct_index = (number - 1) % 4
+    correct_index = 0
     options = list(distractors)
     options.insert(correct_index, correct_option)
     return {
@@ -419,6 +420,11 @@ def login_required(view):
     def wrapped(*args, **kwargs):
         if not signed_in():
             return redirect(url_for("login", next=request.path))
+        user = get_db().execute("SELECT 1 FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+        if user is None:
+            session.clear()
+            flash("Your session expired. Please sign in again.", "error")
+            return redirect(url_for("login", next=request.path))
         return view(*args, **kwargs)
     return wrapped
 
@@ -494,8 +500,11 @@ def home():
     return redirect(url_for("dashboard") if signed_in() else url_for("login"))
 
 
+@app.get("/health")
 @app.get("/api/health")
 def health():
+    if request.path == "/health":
+        return jsonify(status="ok")
     return jsonify(status="success", message="SQL Mastery API is running")
 
 
@@ -680,6 +689,25 @@ def bad_request(error):
 @app.errorhandler(404)
 def not_found(error):
     return render_template("error.html", code=404, message="We couldn't find that page."), 404
+
+
+@app.errorhandler(Exception)
+def unhandled_error(error):
+    if isinstance(error, HTTPException):
+        return error
+    app.logger.error(
+        "Unhandled error during %s %s",
+        request.method,
+        request.path,
+        exc_info=(type(error), error, error.__traceback__),
+    )
+    if request.path.startswith("/api/") or request.is_json:
+        return jsonify(success=False, error="Unable to process the request."), 500
+    return render_template(
+        "error.html",
+        code=500,
+        message="The server couldn't complete this request. The error has been logged.",
+    ), 500
 
 
 if __name__ == "__main__":
