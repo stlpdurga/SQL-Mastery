@@ -2,7 +2,7 @@
 {% block title %}{{ lesson.title }} · SQL Mastery{% endblock %}
 {% block body_class %}app-page lesson-page{% endblock %}
 {% block body %}
-<header class="topbar"><a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a><button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span><span></span></button><nav class="main-nav" data-nav-menu><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a><a class="nav-link active" href="{{ url_for('dashboard') }}#learning-path">Learn SQL</a><a class="nav-link" href="{{ url_for('dashboard') }}#progress">Progress</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="logout-button" type="submit"><span aria-hidden="true">↗</span> Log out</button></form></nav><div class="avatar">{{ username[0]|upper }}</div></header>
+<header class="topbar"><a class="brand" href="{{ url_for('dashboard') }}" aria-label="SQL Mastery home"><img src="{{ url_for('static', filename='assets/sql-mastery-logo.svg') }}" alt="SQL Mastery"></a><button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span><span></span></button><nav class="main-nav" data-nav-menu><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a><a class="nav-link active" href="{{ url_for('dashboard') }}#learning-path">Learn SQL</a><a class="nav-link" href="{{ url_for('practice') }}">Practice</a><a class="nav-link" href="{{ url_for('progress') }}">Progress</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="logout-button" type="submit"><span aria-hidden="true">↗</span> Log out</button></form></nav><div class="avatar">{{ username[0]|upper }}</div></header>
 <main class="lesson-layout"><aside class="lesson-sidebar"><a class="back-link" href="{{ url_for('dashboard') }}">← <span>All lessons</span></a><div class="sidebar-course"><span class="eyebrow">SQL LEARNING PATH</span><h2>Learn by doing.</h2></div><div class="sidebar-levels">{% for level in ['beginner', 'intermediate', 'advanced'] %}<a class="sidebar-level {{ 'selected' if lesson.level == level else '' }}" href="{{ url_for('dashboard') }}#{{ level }}"><span class="level-dot dot-{{ level }}"></span>{{ level|title }}</a>{% endfor %}</div><div class="sidebar-tip"><span>✳</span><p>One concept at a time. You're right where you need to be.</p></div></aside>
 <section class="lesson-content"><div class="lesson-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><span>/</span><span>{{ lesson.level_name }}</span><span>/</span><span>{{ '%02d'|format(lesson.number) }}</span></div><div class="lesson-heading"><div><span class="lesson-tag tag-{{ lesson.level }}">{{ lesson.level_name }} · LESSON {{ '%02d'|format(lesson.number) }}</span><h1>{{ lesson.title }}</h1></div><span class="lesson-duration">◷ &nbsp; 5 min read</span></div>
 <div class="lesson-intro"><span class="intro-mark">“</span><p>{{ lesson.explanation }} {% if lesson.title == 'SELECT' %}Think of a database table like an Excel sheet. SELECT helps you choose which information you want to see.{% endif %}</p></div>
@@ -10,8 +10,64 @@
 <section class="lesson-section"><span class="section-kicker">02 &nbsp; THE SYNTAX</span><h2>A pattern to remember</h2><pre class="code-block"><code>{{ lesson.syntax }}</code></pre></section>
 <section class="lesson-section"><span class="section-kicker">03 &nbsp; AN EXAMPLE</span><h2>See it in a query</h2><pre class="code-block"><code>{{ lesson.example }}</code></pre><div class="output-box"><span class="output-label">WHAT THIS DOES</span><p>{{ lesson.output }}</p></div></section>
 <div class="lesson-two-col"><section class="lesson-section"><span class="section-kicker">GOOD TO KNOW</span><h2>Keep in mind</h2><p>{{ lesson.notes }}</p></section><section class="lesson-section mistake-section"><span class="section-kicker">WATCH OUT</span><h2>A common slip</h2><p>{{ lesson.mistakes }}</p></section></div>
-<section class="practice-panel" data-practice data-lesson-id="{{ lesson.id }}"><div class="practice-head"><div><span class="section-kicker">04 &nbsp; YOUR TURN</span><h2>Try a query.</h2></div><span class="practice-badge">LIVE SQL</span></div><p>{{ lesson.task }}</p><div class="schema-note"><span>TABLES AVAILABLE</span><code>employees · departments</code></div><textarea class="sql-editor" data-sql-editor spellcheck="false" aria-label="Write a SQL query" placeholder="SELECT name FROM employees;"></textarea><div class="editor-actions"><span>SQLite · Read only</span><button class="button button-dark" type="button" data-run-query>Run query <span>→</span></button></div><div class="query-result" data-query-result aria-live="polite"></div></section>
-<section class="quiz-panel" data-quiz data-lesson-id="{{ lesson.id }}"><div class="quiz-topline"><span class="section-kicker">05 &nbsp; QUICK CHECK</span><span>1 question</span></div><h2>{{ lesson.quiz_question }}</h2><div class="quiz-options">{% for option in lesson.options %}<label class="quiz-option"><input type="radio" name="answer" value="{{ loop.index0 }}"><span class="option-letter">{{ 'ABC'[loop.index0] }}</span><span>{{ option }}</span></label>{% endfor %}</div><div class="quiz-submit-row"><button class="button button-outline" type="button" data-submit-quiz>Check answer</button><span data-quiz-result aria-live="polite"></span></div></section>
+<section class="practice-database-panel">
+  <div class="practice-head"><div><span class="section-kicker">04 &nbsp; PRACTICE DATABASE</span><h2>Employees Table</h2></div><span class="practice-badge">Table: employees</span></div>
+  <div class="database-grid">
+    <div class="database-summary">
+      <span class="database-label">Employees</span>
+      <strong>{{ practice_snapshot['employees']|length }} records</strong>
+    </div>
+    <div class="database-summary alternate">
+      <span class="database-label">Departments</span>
+      <strong>{{ practice_snapshot['departments']|length }} records</strong>
+    </div>
+  </div>
+  <div class="database-schemas">
+    <div><strong>employees</strong><code>employee_id · first_name · last_name · email · department_id · job_title · salary · hire_date · manager_id</code></div>
+    <div><strong>departments</strong><code>department_id · department_name · location</code></div>
+  </div>
+  <div class="table-wrap">
+    <table class="practice-table">
+      <thead>
+        <tr>
+          <th>employee_id</th><th>first_name</th><th>last_name</th><th>email</th><th>department_id</th><th>job_title</th><th>salary</th><th>hire_date</th><th>manager_id</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for employee in practice_snapshot['employees'][:12] %}
+        <tr>
+          <td>{{ employee.employee_id }}</td>
+          <td>{{ employee.first_name }}</td>
+          <td>{{ employee.last_name }}</td>
+          <td>{{ employee.email }}</td>
+          <td>{{ employee.department_id }}</td>
+          <td>{{ employee.job_title }}</td>
+          <td>{{ employee.salary }}</td>
+          <td>{{ employee.hire_date }}</td>
+          <td>{{ employee.manager_id if employee.manager_id is not none else 'NULL' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <h3 class="database-table-title">departments</h3>
+  <div class="table-wrap">
+    <table class="practice-table department-table">
+      <thead><tr><th>department_id</th><th>department_name</th><th>location</th></tr></thead>
+      <tbody>{% for department in practice_snapshot['departments'] %}<tr><td>{{ department.department_id }}</td><td>{{ department.department_name }}</td><td>{{ department.location }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+<section class="practice-task-list">
+  <div class="practice-head"><div><span class="section-kicker">05 &nbsp; PRACTICE TASKS</span><h2>Try these examples</h2></div></div>
+  <div class="task-list">
+    {% for task in practice_tasks %}
+    <button type="button" class="task-chip" data-practice-task="{{ task.query }}">{{ task.title }}</button>
+    {% endfor %}
+  </div>
+</section>
+<section id="practice" class="practice-panel" data-practice data-lesson-id="{{ lesson.id }}"><div class="practice-head"><div><span class="section-kicker">06 &nbsp; YOUR TURN</span><h2>Try a query.</h2></div><span class="practice-badge">LIVE SQL</span></div><p>{{ lesson.task }}</p><div class="schema-note"><span>TABLES AVAILABLE</span><code>employees · departments</code></div><textarea class="sql-editor" data-sql-editor spellcheck="false" aria-label="Write a SQL query" placeholder="SELECT name FROM employees;"></textarea><div class="editor-actions"><span>SQLite · Read only</span><button class="button button-dark" type="button" data-run-query>Run query <span>→</span></button></div><div class="query-result" data-query-result aria-live="polite"></div></section>
+<section id="quiz" class="quiz-panel" data-quiz data-lesson-id="{{ lesson.id }}"><div class="quiz-topline"><span class="section-kicker">07 &nbsp; QUICK CHECK</span><span>1 question</span></div><h2>{{ lesson.quiz_question }}</h2><div class="quiz-options">{% for option in lesson.options %}<label class="quiz-option"><input type="radio" name="answer" value="{{ 'ABCD'[loop.index0] }}"><span class="option-letter">{{ 'ABCD'[loop.index0] }}</span><span>{{ option }}</span></label>{% endfor %}</div><div class="quiz-submit-row"><button class="button button-outline" type="button" data-submit-quiz>Check answer</button><span data-quiz-result aria-live="polite"></span></div></section>
 <div class="lesson-finish"><div><span class="section-kicker">NICE WORK</span><p>{% if lesson.completed %}You've completed this lesson. Revisit it any time.{% else %}Mark this lesson complete when you're ready.{% endif %}</p></div><button class="button {{ 'button-complete' if lesson.completed else 'button-primary' }}" type="button" data-complete-lesson data-lesson-id="{{ lesson.id }}" {{ 'disabled' if lesson.completed else '' }}>{{ 'Completed ✓' if lesson.completed else 'Mark complete' }}</button></div>
 {% if next_lesson %}<a class="next-lesson" href="{{ url_for('lesson') }}?id={{ next_lesson.id }}"><span><small>NEXT UP · {{ next_lesson.level_name|upper }}</small><strong>{{ next_lesson.title }}</strong></span><span class="next-arrow">→</span></a>{% else %}<a class="next-lesson" href="{{ url_for('dashboard') }}"><span><small>YOU MADE IT</small><strong>Back to your learning desk</strong></span><span class="next-arrow">→</span></a>{% endif %}
 </section></main>

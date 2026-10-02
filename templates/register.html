@@ -4,12 +4,12 @@
 {% block body %}
 <main class="auth-shell register-shell">
   <section class="auth-story">
-    <a class="brand" href="{{ url_for('login') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a>
+    <a class="brand" href="{{ url_for('login') }}" aria-label="SQL Mastery"><img src="{{ url_for('static', filename='assets/sql-mastery-logo.svg') }}" alt="SQL Mastery"></a>
     <div class="story-copy"><span class="eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Start with<br>one question.</h1><p>Build practical SQL skills with clear lessons, real practice, and a learning path that grows with you.</p><div class="story-note"><span class="note-dot"></span><span><strong>64 focused lessons.</strong><br>One skill at a time.</span></div></div>
     <div class="story-foot"><span>02 / 03</span><span>Beginner to advanced</span></div>
   </section>
   <section class="auth-form-side"><div class="auth-form-wrap register-form-wrap">
-    <div class="mobile-brand"><a class="brand" href="{{ url_for('login') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a></div>
+    <div class="mobile-brand"><a class="brand" href="{{ url_for('login') }}" aria-label="SQL Mastery"><img src="{{ url_for('static', filename='assets/sql-mastery-logo.svg') }}" alt="SQL Mastery"></a></div>
     <span class="eyebrow">YOUR LEARNING STARTS HERE</span><h2>Create your<br>free account.</h2><p class="muted">A few details, then you're ready to go.</p>
     {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert alert-{{ category }}" role="alert">{{ message }}</div>{% endfor %}{% endwith %}
     <form method="post" class="form-stack register-form" data-register-form novalidate>

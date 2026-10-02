@@ -2,4 +2,5 @@
 __pycache__/
 *.py[cod]
 sql_mastery.db
+sql_mastery_practice.db
 .env

@@ -3,10 +3,10 @@
 {% block body_class %}app-page{% endblock %}
 {% block body %}
 <header class="topbar">
-  <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a>
+  <a class="brand" href="{{ url_for('dashboard') }}" aria-label="SQL Mastery home"><img src="{{ url_for('static', filename='assets/sql-mastery-logo.svg') }}" alt="SQL Mastery"></a>
   <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span><span></span></button>
   <nav class="main-nav" data-nav-menu>
-    <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a><a class="nav-link" href="#learning-path">Learn SQL</a><a class="nav-link" href="#learning-path">Practice</a><a class="nav-link" href="#learning-path">Quizzes</a><a class="nav-link" href="#progress">Progress</a><a class="nav-link" href="#profile">Profile</a>
+    <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a><a class="nav-link" href="#learning-path">Learn SQL</a><a class="nav-link" href="{{ url_for('practice') }}">Practice</a><a class="nav-link" href="{{ url_for('lesson', id=next_lesson['id']) }}#quiz">Quizzes</a><a class="nav-link" href="{{ url_for('progress') }}">Progress</a><a class="nav-link" href="#profile">Profile</a>
     <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="logout-button" type="submit"><span aria-hidden="true">↗</span> Log out</button></form>
   </nav>
   <div class="avatar" aria-label="{{ user['full_name'] }}">{{ user['full_name'][0]|upper }}</div>
@@ -23,7 +23,7 @@
   </section>
   <section class="path-heading" id="learning-path"><div><span class="eyebrow">YOUR ROADMAP</span><h2>A path worth following.</h2><p class="muted">Three stages. Clear steps. Your own pace.</p></div><span class="path-count">{{ total }} lessons <span>·</span> 3 levels</span></section>
   <div class="level-grid">
-    {% for level in levels %}<article class="level-card level-{{ level.id }}"><div class="level-card-head"><span class="level-number">0{{ loop.index }}</span><span class="level-status">{{ level.done }} / {{ level.total }} done</span></div><h3>{{ level.name }}</h3><p>{{ level.description }}</p><div class="level-progress"><div class="level-track"><span style="width: {{ level.percent }}%"></span></div><span>{{ level.percent }}%</span></div><div class="lesson-list">
+    {% for level in levels %}<article id="{{ level.id }}" class="level-card level-{{ level.id }}"><div class="level-card-head"><span class="level-number">0{{ loop.index }}</span><span class="level-status">{{ level.done }} / {{ level.total }} done</span></div><h3>{{ level.name }}</h3><p>{{ level.description }}</p><div class="level-progress"><div class="level-track"><span style="width: {{ level.percent }}%"></span></div><span>{{ level.percent }}%</span></div><div class="lesson-list">
     {% for item in level.lessons %}<a class="lesson-row {{ 'is-complete' if item.completed else '' }}" href="{{ url_for('lesson') }}?id={{ item.id }}"><span class="lesson-check">{{ '✓' if item.completed else '%02d'|format(item.number) }}</span><span>{{ item.title }}</span><span class="lesson-arrow">{{ '↗' if item.completed else '→' }}</span></a>{% endfor %}
     </div></article>{% endfor %}
   </div>

@@ -19,10 +19,10 @@ A local-first SQL learning platform built with Flask and SQLite. It includes acc
    python app.py
    ```
 
-4. Open http://127.0.0.1:5000 and create an account.
+4. Open http://127.0.0.1:5000/login to sign in or create an account.
 
-The SQLite database is created automatically as `sql_mastery.db` on first start. Set `SQL_MASTERY_DATABASE` to move it elsewhere. Set `SQL_MASTERY_SECRET_KEY` to a stable random secret for deployments; local development generates a new secret when the process starts. Set `SQL_MASTERY_HTTPS=1` when serving over HTTPS so session cookies use the Secure flag. Never expose the Flask development server to the public internet; deploy behind a production WSGI server and HTTPS.
+The account/progress database is created automatically as `sql_mastery.db` on first start. Set `SQL_MASTERY_DATABASE` to move it elsewhere. Set `SQL_MASTERY_PRACTICE_DATABASE` to choose another path for the separately stored practice database. Set `SQL_MASTERY_SECRET_KEY` to a stable random secret for deployments; local development generates a new secret when the process starts. Set `SQL_MASTERY_HTTPS=1` when serving over HTTPS so session cookies use the Secure flag. Never expose the Flask development server to the public internet; deploy behind a production WSGI server and HTTPS.
 
 ## Learning activity
 
-Completing a lesson, running a valid read-only practice query, or submitting a quiz counts as activity for that calendar day. Opening the site or signing in does not. The practice runner uses a fresh in-memory SQLite database containing sample `employees` and `departments` tables; it never executes against the application database.
+Completing a lesson, running a valid read-only practice query, or submitting a quiz counts as activity for that calendar day. Opening the site or signing in does not. A separate SQLite practice database is seeded automatically with 20 employees and six departments. The `/practice` route opens the built-in SQL editor; `/progress` shows lesson completion, quiz average, activity streaks, and the last learning activity. Practice queries are read-only and never execute against account or progress data.

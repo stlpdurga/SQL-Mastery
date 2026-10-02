@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Your progress · SQL Mastery{% endblock %}
+{% block body_class %}app-page progress-page{% endblock %}
+{% block body %}
+<header class="topbar">
+  <a class="brand" href="{{ url_for('dashboard') }}" aria-label="SQL Mastery home"><img src="{{ url_for('static', filename='assets/sql-mastery-logo.svg') }}" alt="SQL Mastery"></a>
+  <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span><span></span></button>
+  <nav class="main-nav" data-nav-menu>
+    <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a><a class="nav-link" href="{{ url_for('dashboard') }}#learning-path">Learn SQL</a><a class="nav-link" href="{{ url_for('practice') }}">Practice</a><a class="nav-link active" href="{{ url_for('progress') }}">Progress</a>
+    <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="logout-button" type="submit">Log out</button></form>
+  </nav>
+  <div class="avatar" aria-label="{{ user['full_name'] }}">{{ user['full_name'][0]|upper }}</div>
+</header>
+<main class="progress-main">
+  <header class="progress-heading"><span class="eyebrow">YOUR LEARNING JOURNEY</span><h1>Progress</h1><p class="muted">A clear view of what you've learned and what's next.</p></header>
+  <section class="progress-summary" aria-label="Learning summary">
+    <article class="progress-stat"><span>Overall progress</span><strong>{{ percent }}%</strong><div class="progress-track"><span style="width:{{ percent }}%"></span></div><small>{{ completed }} of {{ total }} lessons completed</small></article>
+    <article class="progress-stat"><span>Quiz average</span><strong>{{ quiz_score }}%</strong><small>{{ 'Across your quiz attempts' if quiz_score else 'No quiz attempts yet' }}</small></article>
+    <article class="progress-stat"><span>Current streak</span><strong>{{ streak }} {{ 'day' if streak == 1 else 'days' }}</strong><small>Longest streak: {{ longest }} {{ 'day' if longest == 1 else 'days' }}</small></article>
+    <article class="progress-stat"><span>Last learning activity</span><strong class="last-activity">{{ last_activity or 'Not yet' }}</strong><small>Lessons, quizzes, and practice count</small></article>
+  </section>
+  <section class="progress-levels"><h2>Progress by level</h2>
+    {% for level in levels %}
+    <article class="progress-level level-{{ level.id }}"><div class="progress-level-head"><div><span class="level-number">0{{ loop.index }}</span><h3>{{ level.name }}</h3></div><strong>{{ level.done }} / {{ level.total }}</strong></div><p>{{ level.description }}</p><div class="progress-track"><span style="width:{{ level.percent }}%"></span></div><div class="progress-level-foot"><span>{{ level.percent }}% complete</span><a href="{{ url_for('dashboard') }}#{{ level.id }}">View lessons →</a></div></article>
+    {% endfor %}
+  </section>
+  <section class="completed-lessons"><h2>Completed lessons</h2>
+    {% set completed_lessons = lessons|selectattr('completed')|list %}
+    {% if completed_lessons %}<ul>{% for item in completed_lessons %}<li><a href="{{ url_for('lesson') }}?id={{ item.id }}">{{ '%02d'|format(item.number) }} · {{ item.title }}</a><span>{{ item.level_name }}</span></li>{% endfor %}</ul>{% else %}<p>No lessons completed yet. Your first one is ready in the learning path.</p>{% endif %}
+  </section>
+</main>
+{% endblock %}

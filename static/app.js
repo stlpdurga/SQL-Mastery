@@ -38,6 +38,17 @@
     return data;
   }
 
+  document.querySelectorAll('[data-practice-task]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const editor = document.querySelector('[data-sql-editor]');
+      if (!editor) return;
+      editor.value = button.dataset.practiceTask;
+      editor.focus();
+      const position = editor.value.length;
+      editor.setSelectionRange(position, position);
+    });
+  });
+
   document.querySelector('[data-run-query]')?.addEventListener('click', async (event) => {
     const panel = event.currentTarget.closest('[data-practice]');
     const editor = panel.querySelector('[data-sql-editor]');
@@ -87,8 +98,8 @@
     }
     event.currentTarget.disabled = true;
     try {
-      const data = await postJson('/api/quiz', { lesson_id: panel.dataset.lessonId, answer: Number(answer.value) });
-      output.textContent = data.correct ? 'That’s right. Nice work!' : `Not quite. ${data.correct_answer}`;
+      const data = await postJson('/api/quiz', { lesson_id: panel.dataset.lessonId, answer: answer.value });
+      output.textContent = data.correct ? 'Correct!' : `Not quite. Correct answer: ${data.correct_answer}`;
       output.className = data.correct ? 'quiz-feedback-good' : 'quiz-feedback-bad';
     } catch (error) {
       output.textContent = error.message;
