@@ -12,17 +12,18 @@ A local-first SQL learning platform built with Flask and SQLite. It includes acc
    .\.venv\Scripts\Activate.ps1
    ```
 
-3. Install dependencies and start the app:
+3. Copy `.env.example` to `.env` and set a private `SECRET_KEY` value.
+4. Install dependencies and start the app:
 
    ```powershell
    python -m pip install -r requirements.txt
    python app.py
    ```
 
-4. Open http://127.0.0.1:5000/login to sign in or create an account.
+5. Open http://127.0.0.1:5000/login to sign in or create an account.
 
-The account/progress database is created automatically as `sql_mastery.db` on first start. Set `SQL_MASTERY_DATABASE` to move it elsewhere. Set `SQL_MASTERY_PRACTICE_DATABASE` to choose another path for the separately stored practice database. Set `SQL_MASTERY_SECRET_KEY` to a stable random secret for deployments; local development generates a new secret when the process starts. Set `SQL_MASTERY_HTTPS=1` when serving over HTTPS so session cookies use the Secure flag. Never expose the Flask development server to the public internet; deploy behind a production WSGI server and HTTPS.
+The account/progress and practice databases initialize lazily on the first non-health request. Locally they are created beside `app.py`; `SQL_MASTERY_DATABASE` and `SQL_MASTERY_PRACTICE_DATABASE` can override their paths. The root `app.py` exposes the Flask `app` object directly for Vercel's Flask runtime; no custom `vercel.json` routing is required. `/api/health` does not initialize or depend on SQLite.
 
 ## Learning activity
 
-Completing a lesson, running a valid read-only practice query, or submitting a quiz counts as activity for that calendar day. Opening the site or signing in does not. A separate SQLite practice database is seeded automatically with 20 employees and six departments. The `/practice` route opens the built-in SQL editor; `/progress` shows lesson completion, quiz average, activity streaks, and the last learning activity. Practice queries are read-only and never execute against account or progress data.
+For Vercel, configure `SECRET_KEY` in Project Settings → Environment Variables before using login. Serverless SQLite files are placed under `/tmp/sql-mastery`; this storage is temporary and not shared reliably across instances, so account data, progress, and streaks are demo-only on Vercel. Use a persistent external database before relying on deployed user data. The built-in practice data is reproducibly seeded with 20 employees and six departments. Completing a lesson, running a valid read-only practice query, or submitting a quiz counts as activity; opening the site or signing in does not. `/practice` opens the SQL editor and `/progress` shows learning statistics. Never expose the Flask development server publicly; use HTTPS and a production deployment.

@@ -2,20 +2,35 @@ import os
 import re
 import secrets
 import sqlite3
+import threading
 from datetime import date, timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
 from flask import Flask, abort, flash, g, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 ROOT = Path(__file__).resolve().parent
-DATABASE = Path(os.environ.get("SQL_MASTERY_DATABASE", ROOT / "sql_mastery.db"))
+load_dotenv(ROOT / ".env")
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+DATA_ROOT = Path(os.environ.get("TMPDIR") or "/tmp") / "sql-mastery" if IS_VERCEL else ROOT
+
+
+def configured_database_path(environment_name, default_name):
+    value = os.environ.get(environment_name)
+    path = Path(value).expanduser() if value else Path(default_name)
+    return path if path.is_absolute() else DATA_ROOT / path
+
+
+DATABASE = configured_database_path("SQL_MASTERY_DATABASE", "sql_mastery.db")
+PRACTICE_DATABASE = configured_database_path("SQL_MASTERY_PRACTICE_DATABASE", "sql_mastery_practice.db")
+CONFIGURED_SECRET_KEY = os.environ.get("SECRET_KEY") or os.environ.get("SQL_MASTERY_SECRET_KEY")
 app = Flask(__name__)
-app.secret_key = os.environ.get("SQL_MASTERY_SECRET_KEY") or secrets.token_hex(32)
+app.secret_key = CONFIGURED_SECRET_KEY or secrets.token_hex(32)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.environ.get("SQL_MASTERY_HTTPS", "0") == "1",
+    SESSION_COOKIE_SECURE=IS_VERCEL or os.environ.get("SQL_MASTERY_HTTPS", "0") == "1",
     PERMANENT_SESSION_LIFETIME=timedelta(days=14),
 )
 
@@ -167,7 +182,6 @@ def build_curriculum():
 
 LESSONS = build_curriculum()
 LESSON_BY_ID = {lesson["id"]: lesson for lesson in LESSONS}
-PRACTICE_DATABASE = Path(os.environ.get("SQL_MASTERY_PRACTICE_DATABASE", ROOT / "sql_mastery_practice.db"))
 PRACTICE_DEPARTMENTS = [
     (1, "IT", "Hyderabad"),
     (2, "HR", "Vijayawada"),
@@ -298,16 +312,14 @@ def initialize_practice_db():
                 city TEXT NOT NULL
             );
         """)
-        if connection.execute("SELECT COUNT(*) FROM departments").fetchone()[0] == 0:
-            connection.executemany(
-                "INSERT INTO departments (department_id, department_name, location) VALUES (?, ?, ?)",
-                PRACTICE_DEPARTMENTS,
-            )
-        if connection.execute("SELECT COUNT(*) FROM employees").fetchone()[0] == 0:
-            connection.executemany(
-                "INSERT INTO employees (id, name, age, gender, department, job_title, salary, hire_date, city) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                PRACTICE_EMPLOYEES,
-            )
+        connection.executemany(
+            "INSERT OR IGNORE INTO departments (department_id, department_name, location) VALUES (?, ?, ?)",
+            PRACTICE_DEPARTMENTS,
+        )
+        connection.executemany(
+            "INSERT OR IGNORE INTO employees (id, name, age, gender, department, job_title, salary, hire_date, city) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            PRACTICE_EMPLOYEES,
+        )
         employee_columns = {row[1] for row in connection.execute("PRAGMA table_info(employees)")}
         required_columns = {
             "employee_id": "INTEGER",
@@ -337,8 +349,20 @@ def initialize_practice_db():
         connection.commit()
 
 
-initialize_db()
-initialize_practice_db()
+_DATABASES_INITIALIZED = False
+_DATABASE_INITIALIZATION_LOCK = threading.Lock()
+
+
+def initialize_databases():
+    global _DATABASES_INITIALIZED
+    if _DATABASES_INITIALIZED:
+        return
+    with _DATABASE_INITIALIZATION_LOCK:
+        if _DATABASES_INITIALIZED:
+            return
+        initialize_db()
+        initialize_practice_db()
+        _DATABASES_INITIALIZED = True
 
 
 @app.teardown_appcontext
@@ -356,6 +380,22 @@ def csrf_context():
     if "csrf_token" not in session:
         session["csrf_token"] = secrets.token_urlsafe(32)
     return {"csrf_token": session["csrf_token"]}
+
+
+@app.before_request
+def prepare_runtime():
+    if request.endpoint == "health":
+        return None
+    if IS_VERCEL and not CONFIGURED_SECRET_KEY:
+        app.logger.error("SECRET_KEY must be configured for authenticated Vercel routes.")
+        return jsonify(success=False, error="Server configuration missing: set SECRET_KEY in Vercel environment variables."), 503
+    try:
+        initialize_databases()
+    except (OSError, sqlite3.Error):
+        app.logger.exception("Database initialization failed.")
+        if request.path.startswith("/api/"):
+            return jsonify(success=False, error="Unable to initialize application storage."), 500
+        abort(500, "Unable to initialize application storage. Check the server logs.")
 
 
 @app.before_request
@@ -452,6 +492,11 @@ def get_practice_snapshot():
 @app.route("/")
 def home():
     return redirect(url_for("dashboard") if signed_in() else url_for("login"))
+
+
+@app.get("/api/health")
+def health():
+    return jsonify(status="success", message="SQL Mastery API is running")
 
 
 @app.route("/login.html", methods=["GET", "POST"])
