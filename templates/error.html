@@ -1,0 +1,4 @@
+{% extends 'base.html' %}
+{% block title %}{{ code }} · SQL Mastery{% endblock %}
+{% block body_class %}error-page{% endblock %}
+{% block body %}<main class="error-wrap"><a class="brand" href="{{ url_for('home') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a><span class="eyebrow">{{ code }} · A SMALL DETOUR</span><h1>{{ message }}</h1><a class="button button-primary" href="{{ url_for('dashboard') if session.get('user_id') else url_for('login') }}">Back to learning <span>→</span></a></main>{% endblock %}

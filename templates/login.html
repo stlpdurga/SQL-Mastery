@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Sign in · SQL Mastery{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block body %}
+<main class="auth-shell">
+  <section class="auth-story">
+    <a class="brand" href="{{ url_for('login') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a>
+    <div class="story-copy">
+      <span class="eyebrow">YOUR NEXT CHAPTER STARTS HERE</span>
+      <h1>Make sense<br>of your data.</h1>
+      <p>From your very first SELECT to the ideas behind better, faster queries. Learn at your own pace, one small win at a time.</p>
+      <div class="story-note"><span class="note-dot"></span><span><strong>Learn SQL. Practice SQL.</strong><br>Master SQL.</span></div>
+    </div>
+    <div class="story-foot"><span>01 / 03</span><span>Made for curious minds</span></div>
+  </section>
+  <section class="auth-form-side">
+    <div class="auth-form-wrap">
+      <div class="mobile-brand"><a class="brand" href="{{ url_for('login') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a></div>
+      <span class="eyebrow">WELCOME BACK</span>
+      <h2>Pick up where<br>you left off.</h2>
+      <p class="muted">Your learning journey is right where you left it.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert alert-{{ category }}" role="status">{{ message }}</div>{% endfor %}{% endwith %}
+      <form method="post" class="form-stack">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="identity">Email or username</label>
+        <input id="identity" name="identity" type="text" autocomplete="username" placeholder="you@example.com" required autofocus>
+        <div class="password-label"><label for="password">Password</label><a href="#" class="text-link" data-placeholder-link>Forgot password?</a></div>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+        <label class="check-row"><input type="checkbox" name="remember" checked><span>Keep me signed in for 14 days</span></label>
+        <button class="button button-primary button-wide" type="submit">Sign in <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="auth-switch">New to SQL Mastery? <a class="text-link" href="{{ url_for('register') }}">Create an account</a></p>
+      <p class="auth-legal">By signing in, you agree to learn something new today.</p>
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Your learning desk · SQL Mastery{% endblock %}
+{% block body_class %}app-page{% endblock %}
+{% block body %}
+<header class="topbar">
+  <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">S<span>Q</span></span><span>SQL <b>Mastery</b></span></a>
+  <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span><span></span></button>
+  <nav class="main-nav" data-nav-menu>
+    <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a><a class="nav-link" href="#learning-path">Learn SQL</a><a class="nav-link" href="#learning-path">Practice</a><a class="nav-link" href="#learning-path">Quizzes</a><a class="nav-link" href="#progress">Progress</a><a class="nav-link" href="#profile">Profile</a>
+    <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="logout-button" type="submit"><span aria-hidden="true">↗</span> Log out</button></form>
+  </nav>
+  <div class="avatar" aria-label="{{ user['full_name'] }}">{{ user['full_name'][0]|upper }}</div>
+</header>
+<main class="dashboard-main">
+  <section class="welcome-row"><div><span class="eyebrow">YOUR LEARNING DESK</span><h1>Welcome back, {{ user['username'] }}<span class="wave"> ✳</span></h1><p class="muted">Ready to continue your SQL journey?</p><a class="button button-primary continue-button" href="{{ url_for('lesson') }}?id={{ next_lesson['id'] }}">Continue learning <span aria-hidden="true">→</span></a></div>
+    <a class="continue-preview" href="{{ url_for('lesson') }}?id={{ next_lesson['id'] }}"><span class="preview-top"><span class="preview-icon">{% if next_lesson['level'] == 'beginner' %}01{% elif next_lesson['level'] == 'intermediate' %}02{% else %}03{% endif %}</span><span class="preview-label">UP NEXT · {{ next_lesson['level_name']|upper }}</span></span><strong>{{ next_lesson['title'] }}</strong><span class="preview-bottom">{{ 'Lesson complete' if next_lesson['completed'] else 'Continue where you left off' }} <span>↗</span></span></a>
+  </section>
+  <section class="stats-grid" id="progress" aria-label="Learning statistics">
+    <article class="stat-card stat-progress"><div class="stat-top"><span>Learning progress</span><span class="stat-glyph">↗</span></div><strong>{{ percent }}<small>%</small></strong><div class="mini-track"><span style="width: {{ percent }}%"></span></div><small class="stat-caption">{{ completed }} of {{ total }} lessons</small></article>
+    <article class="stat-card stat-lessons"><div class="stat-top"><span>Lessons completed</span><span class="stat-glyph">✓</span></div><strong>{{ completed }}<small> / {{ total }}</small></strong><small class="stat-caption">Every lesson moves you forward</small></article>
+    <article class="stat-card stat-streak"><div class="stat-top"><span>Current streak</span><span class="stat-glyph">✳</span></div><strong>{{ streak }}<small> {{ 'day' if streak == 1 else 'days' }}</small></strong><small class="stat-caption">{% if streak %}Keep going! You're on a {{ streak }}-day streak.{% else %}Complete a lesson or quiz to start a streak.{% endif %}</small></article>
+    <article class="stat-card stat-quiz"><div class="stat-top"><span>Quiz average</span><span class="stat-glyph">◎</span></div><strong>{{ quiz_score }}<small>%</small></strong><small class="stat-caption">{{ 'Across your quiz attempts' if quiz_score else 'Your first quiz is waiting' }}</small></article>
+  </section>
+  <section class="path-heading" id="learning-path"><div><span class="eyebrow">YOUR ROADMAP</span><h2>A path worth following.</h2><p class="muted">Three stages. Clear steps. Your own pace.</p></div><span class="path-count">{{ total }} lessons <span>·</span> 3 levels</span></section>
+  <div class="level-grid">
+    {% for level in levels %}<article class="level-card level-{{ level.id }}"><div class="level-card-head"><span class="level-number">0{{ loop.index }}</span><span class="level-status">{{ level.done }} / {{ level.total }} done</span></div><h3>{{ level.name }}</h3><p>{{ level.description }}</p><div class="level-progress"><div class="level-track"><span style="width: {{ level.percent }}%"></span></div><span>{{ level.percent }}%</span></div><div class="lesson-list">
+    {% for item in level.lessons %}<a class="lesson-row {{ 'is-complete' if item.completed else '' }}" href="{{ url_for('lesson') }}?id={{ item.id }}"><span class="lesson-check">{{ '✓' if item.completed else '%02d'|format(item.number) }}</span><span>{{ item.title }}</span><span class="lesson-arrow">{{ '↗' if item.completed else '→' }}</span></a>{% endfor %}
+    </div></article>{% endfor %}
+  </div>
+  <section class="bottom-note" id="profile"><span class="note-spark">✳</span><div><strong>Small steps add up.</strong><p>Your longest streak so far is {{ longest }} {{ 'day' if longest == 1 else 'days' }}. Every lesson, practice query, and quiz counts.</p></div><a href="{{ url_for('lesson') }}?id={{ next_lesson['id'] }}" aria-label="Continue to next lesson">→</a></section>
+  <footer class="app-footer"><span>SQL Mastery</span><span>Learn SQL. Practice SQL. Master SQL.</span></footer>
+</main>
+{% endblock %}
